@@ -1,10 +1,18 @@
+# Normalisation globale
 * text=auto eol=lf
 
+# Fichiers spécifiques pour Laravel + Vue
+*.js    text eol=lf
+*.vue   text eol=lf
+*.php   diff=php
 *.blade.php diff=html
-*.css diff=css
-*.html diff=html
-*.md diff=markdown
-*.php diff=php
+*.css   diff=css
+*.html  diff=html
+*.md    diff=markdown
+*.json  text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
 
+# Ignorer à l'export
 CHANGELOG.md export-ignore
 README.md export-ignore

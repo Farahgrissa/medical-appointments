@@ -60,7 +60,7 @@
   </AppLayout>
 </template>
 
-<script>
+<script lang="js">
 import { ref } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';

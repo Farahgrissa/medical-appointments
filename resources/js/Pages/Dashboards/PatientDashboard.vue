@@ -42,6 +42,6 @@
   </AppLayout>
 </template>
 
-<script setup>
+<script setup lang="js">
 import AppLayout from '@/Layouts/AppLayout.vue';
 </script>

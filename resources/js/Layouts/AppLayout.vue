@@ -16,8 +16,8 @@
   </div>
 </template>
 
-<script>
-import Header from '@/Components/Header.vue';
+<script lang="js">
+import Header from '@/Components/appHeader.vue';
 import SidebarMenu from '@/Components/SidebarMenu.vue';
 
 export default {

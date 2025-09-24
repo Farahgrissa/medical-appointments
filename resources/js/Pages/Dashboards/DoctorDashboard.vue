@@ -84,7 +84,7 @@
   </AppLayout>
 </template>
 
-<script setup>
+<script setup lang="js">
 import { router } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 

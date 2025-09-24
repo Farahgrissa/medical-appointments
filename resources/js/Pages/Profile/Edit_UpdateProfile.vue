@@ -52,7 +52,7 @@
   </AppLayout>
 </template>
 
-<script>
+<script lang="js">
 import { ref } from 'vue';
 import { usePage, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
@@ -65,11 +65,11 @@ export default {
 
     // Initialiser le formulaire avec les valeurs actuelles
     const form = ref({
-      name: user.name || '',
-      phone: user.phone || '',
-      gender: user.gender || '',
-      date_of_birth: user.date_of_birth || '',
-      address: user.address || '',
+      name: user.value.name || '',
+      phone: user.value.phone || '',
+      gender: user.value.gender || '',
+      date_of_birth: user.value.date_of_birth || '',
+      address: user.value.address || '',
       password: ''
     });
 

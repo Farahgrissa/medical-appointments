@@ -47,7 +47,7 @@
   </header>
 </template>
 
-<script>
+<script lang="js">
 import { ref } from 'vue';
 import { router } from '@inertiajs/vue3';
 

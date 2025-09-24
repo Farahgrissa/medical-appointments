@@ -56,7 +56,7 @@
   </div>
 </template>
 
-<script>
+<script lang="js">
 export default {
   name: "AdminDashboard",
   props: {

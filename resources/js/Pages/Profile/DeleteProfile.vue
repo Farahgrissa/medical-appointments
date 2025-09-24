@@ -37,7 +37,7 @@
   </AppLayout>
 </template>
 
-<script>
+<script lang="js">
 import { ref } from 'vue';
 import { Inertia } from '@inertiajs/inertia';
 import { route } from 'ziggy-js';

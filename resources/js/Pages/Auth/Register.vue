@@ -84,7 +84,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="js">
 import { ref } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 import { Inertia } from '@inertiajs/inertia'

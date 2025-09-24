@@ -15,7 +15,7 @@
   </div>
 </template>
 
-<script setup>
+<script  setup lang="js">
 defineProps({
   id: String,
   label: String,

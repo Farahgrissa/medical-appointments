@@ -85,7 +85,7 @@
   </aside>
 </template>
 
-<script setup>
+<script setup lang="js">
 import { ref } from 'vue'
 
 const showProfileMenu = ref(false)
