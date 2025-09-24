@@ -6,7 +6,7 @@
     <!-- Right Side: Header + Page Content -->
     <div class="flex-1 flex flex-col">
       <!-- Header -->
-      <Header />
+      <appHeader />
 
       <!-- Page Content -->
       <main class="flex-1 p-6">
@@ -17,12 +17,12 @@
 </template>
 
 <script lang="js">
-import Header from '@/Components/appHeader.vue';
+import appHeader from '@/Components/appHeader.vue';
 import SidebarMenu from '@/Components/SidebarMenu.vue';
 
 export default {
   components: {
-    Header,
+    appHeader,
  
     SidebarMenu,
   },
