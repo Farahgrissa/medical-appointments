@@ -90,8 +90,8 @@ import AppLayout from '@/Layouts/AppLayout.vue'
 
 // Props envoyées par Laravel via Inertia
 const props = defineProps({
-  slots: Array,
-  appointments: Array
+  slot: Array,
+  appointment: Array
 })
 
 // Methods (Inertia POST/PUT/DELETE)

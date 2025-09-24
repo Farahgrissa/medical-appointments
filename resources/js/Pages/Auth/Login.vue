@@ -14,10 +14,6 @@ const submit = () => {
   })
 }
 
-// logout function
-const logout = () => {
-  form.post('/logout')
-}
 </script>
 
 <template>
