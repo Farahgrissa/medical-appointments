@@ -77,7 +77,7 @@ export default {
           setTimeout(() => showToast.value = false, 3000);
 
           setTimeout(() => {
-            window.location.href = '/welcome';
+            window.location.href = '/';
           }, 1500);
         },
         onFinish: () => {

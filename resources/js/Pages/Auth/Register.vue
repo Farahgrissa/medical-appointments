@@ -50,20 +50,6 @@
         required
       />
 
-      <!-- Role (Doctor / Patient) -->
-      <div>
-        <label for="role" class="block text-sm font-medium text-gray-700">Role</label>
-        <select
-          id="role"
-          v-model="form.role"
-          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-amber-500"
-        >
-          <option value="patient">Patient</option>
-          <option value="doctor">Doctor</option>
-        </select>
-        <p v-if="form.errors.role" class="text-red-600 text-sm mt-1">{{ form.errors.role }}</p>
-      </div>
-
       <!-- Submit -->
       <button type="submit" :disabled="form.processing"
               class="w-full py-2 px-4 rounded-md text-white bg-amber-600 hover:bg-amber-700 disabled:opacity-50">
@@ -95,7 +81,6 @@ const form = useForm({
   email: '',
   password: '',
   password_confirmation: '',
-  role: 'patient', // valeur par défaut
 })
 
 const emailSent = ref(false)

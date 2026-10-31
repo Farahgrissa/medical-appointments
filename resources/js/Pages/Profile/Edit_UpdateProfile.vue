@@ -40,8 +40,18 @@
 
         <!-- Password -->
         <div class="sm:col-span-2">
-          <label class="block text-stone-600 font-medium">Password</label>
+          <label class="block text-stone-600 font-medium">Current Password</label>
+          <input v-model="form.current_password" type="password" placeholder="Required only to change your password" class="mt-1 w-full border rounded px-2 py-1" />
+        </div>
+
+        <div>
+          <label class="block text-stone-600 font-medium">New Password</label>
           <input v-model="form.password" type="password" placeholder="Leave empty to keep current" class="mt-1 w-full border rounded px-2 py-1" />
+        </div>
+
+        <div>
+          <label class="block text-stone-600 font-medium">Confirm New Password</label>
+          <input v-model="form.password_confirmation" type="password" class="mt-1 w-full border rounded px-2 py-1" />
         </div>
 
         <div class="sm:col-span-2">
@@ -70,7 +80,9 @@ export default {
       gender: user.value.gender || '',
       date_of_birth: user.value.date_of_birth || '',
       address: user.value.address || '',
-      password: ''
+      current_password: '',
+      password: '',
+      password_confirmation: ''
     });
 
 

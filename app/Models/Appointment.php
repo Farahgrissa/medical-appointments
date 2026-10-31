@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\AppointmentStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -14,15 +15,15 @@ class Appointment extends Model
         'appointment_date',
         'start_time',
         'end_time',
-        'status', // scheduled, confirmed, cancelled, completed, no_show
+        'status', // see App\Enums\AppointmentStatus
         'reason',
-        'notes',
     ];
 
     protected $casts = [
         'appointment_date' => 'date:Y-m-d',
         'start_time' => 'datetime:H:i:s',
         'end_time' => 'datetime:H:i:s',
+        'status' => AppointmentStatus::class,
     ];
 
     /**
@@ -54,12 +55,12 @@ class Appointment extends Model
      */
     public function isConfirmed(): bool
     {
-        return $this->status === 'confirmed';
+        return $this->status === AppointmentStatus::Confirmed;
     }
 
-    public function isCompleted(): bool
+    public function isCancelled(): bool
     {
-        return $this->status === 'completed';
+        return $this->status === AppointmentStatus::Cancelled;
     }
 
     /**

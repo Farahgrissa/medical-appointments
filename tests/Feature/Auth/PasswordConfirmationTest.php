@@ -4,6 +4,7 @@ namespace Tests\Feature\Auth;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class PasswordConfirmationTest extends TestCase
@@ -16,18 +17,19 @@ class PasswordConfirmationTest extends TestCase
 
         $response = $this->actingAs($user)->get('/confirm-password');
 
-        $response->assertStatus(200);
+        $response->assertStatus(200)
+            ->assertInertia(fn (Assert $page) => $page->component('Auth/ConfirmPassword'));
     }
 
     public function test_password_can_be_confirmed(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->patient()->create();
 
         $response = $this->actingAs($user)->post('/confirm-password', [
             'password' => 'password',
         ]);
 
-        $response->assertRedirect();
+        $response->assertRedirect(route('patient.dashboard', absolute: false));
         $response->assertSessionHasNoErrors();
     }
 

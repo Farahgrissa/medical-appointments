@@ -1,25 +1,20 @@
 <?php
 namespace App\Http\Controllers\Users;
 
+use App\Enums\AppointmentStatus;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Appointment;
-use App\Models\PatientFile;
 
 class PatientController extends Controller
 {
     public function __construct()
     {
-        $this->middleware(['auth', 'role:patient']);
-
-        // Permissions pour les actions spécifiques
+        // 'auth' et 'role:patient' sont déjà appliqués dans routes/web.php.
+        // L'accès à un rendez-vous précis est vérifié par AppointmentPolicy.
         $this->middleware('permission:view-appointment')->only(['dashboard', 'appointments']);
-        $this->middleware('permission:edit-appointment')->only(['editAppointment', 'updateAppointment']);
-        $this->middleware('permission:delete-appointment')->only(['cancelAppointment']);
-        $this->middleware('permission:view-patient-file')->only(['profile']);
-        $this->middleware('permission:edit-patient-file')->only(['updateProfile']);
     }
 
     // ===== DASHBOARD =====
@@ -32,7 +27,7 @@ class PatientController extends Controller
             ->when($request->input('search'), fn($q, $search) =>
                 $q->whereDate('appointment_date', $search)
             )
-            ->where('status', '!=', 'cancelled')
+            ->where('status', '!=', AppointmentStatus::Cancelled)
             ->orderBy('appointment_date', 'asc')
             ->get();
 
@@ -68,7 +63,7 @@ class PatientController extends Controller
     // ===== EDIT APPOINTMENT =====
     public function editAppointment(Appointment $appointment)
     {
-        $this->authorize('modify appointments');
+        $this->authorize('update', $appointment);
 
         return Inertia::render('Patient/EditAppointment', [
             'appointment' => $appointment->load('doctor'),
@@ -77,7 +72,7 @@ class PatientController extends Controller
 
     public function updateAppointment(Request $request, Appointment $appointment)
     {
-        $this->authorize('modify appointments');
+        $this->authorize('update', $appointment);
 
         $appointment->update($request->validate([
             'appointment_date' => 'required|date|after_or_equal:today',
@@ -90,9 +85,9 @@ class PatientController extends Controller
     // ===== CANCEL APPOINTMENT =====
     public function cancelAppointment(Appointment $appointment)
     {
-        $this->authorize('cancel appointments');
+        $this->authorize('cancel', $appointment);
 
-        $appointment->update(['status' => 'cancelled']);
+        $appointment->update(['status' => AppointmentStatus::Cancelled]);
 
         return redirect()->route('patient.appointments')->with('success', 'Appointment cancelled.');
     }

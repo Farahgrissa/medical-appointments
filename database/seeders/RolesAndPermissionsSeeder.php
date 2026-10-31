@@ -26,6 +26,9 @@ class RolesAndPermissionsSeeder extends Seeder
             'view-slot',
             'edit-slot',
             'delete-slot',
+            'view-profile',
+            'edit-profile',
+            'delete-profile',
         ];
 
         foreach ($permissions as $perm) {

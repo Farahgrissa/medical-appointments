@@ -10,23 +10,16 @@ use Inertia\Inertia;
 use App\Models\User;
 
 Route::get('/', function () {
-    if (Auth::check()) {
-        /** @var User $user */
-        $user = Auth::user();
+    /** @var User|null $user */
+    $user = Auth::user();
 
-        if ($user->hasRole('admin')) {
-            return redirect()->route('admin.dashboard');
-        } elseif ($user->hasRole('doctor')) {
-            return redirect()->route('doctor.dashboard');
-        } elseif ($user->hasRole('patient')) {
-            return redirect()->route('patient.dashboard');
-        } else {
-            return Inertia::render('welcome');
-        }
+    // Un utilisateur connecté avec un rôle va directement sur son tableau de bord
+    if ($user && $user->dashboardRoute() !== 'home') {
+        return redirect()->route($user->dashboardRoute());
     }
 
     return Inertia::render('welcome');
-});
+})->name('home');
 
 require __DIR__ . '/auth.php';
 // Patient routes
@@ -47,15 +40,25 @@ Route::prefix('patient')->middleware(['auth', 'role:patient'])->group(function (
 
     // Destroy profile
     Route::delete('/profile/destroy', [ProfileController::class, 'destroy'])->name('patient.destroyProfile');
+
+    // Appointments
+    Route::get('/appointments', [PatientController::class, 'appointments'])->name('patient.appointments');
+    Route::get('/appointments/{appointment}/edit', [PatientController::class, 'editAppointment'])->name('patient.editAppointment');
+    Route::put('/appointments/{appointment}', [PatientController::class, 'updateAppointment'])->name('patient.updateAppointment');
+    Route::patch('/appointments/{appointment}/cancel', [PatientController::class, 'cancelAppointment'])->name('patient.cancelAppointment');
 });
-
-
-
 
 // ===== Doctor routes =====
 Route::prefix('doctor')->middleware(['auth', 'role:doctor'])->group(function () {
     Route::get('/dashboard', [DoctorController::class, 'dashboard'])->name('doctor.dashboard');
-    // ajoute tes autres méthodes ici
+
+    // Appointments
+    Route::get('/appointments', [DoctorController::class, 'appointments'])->name('doctor.appointments');
+
+    // Profile
+    Route::get('/profile', [DoctorController::class, 'profile'])->name('doctor.profile');
+    Route::put('/profile', [DoctorController::class, 'updateProfile'])->name('doctor.updateProfile');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('doctor.destroyProfile');
 });
 
 // ===== Admin routes =====

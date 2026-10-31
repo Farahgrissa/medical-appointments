@@ -26,7 +26,7 @@
                 <button
                   class="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600"
                   @click="bookSlot(slot.id)"
-                  :disabled="slot.status !== 'Available'"
+                  :disabled="slot.status !== 'available'"
                 >
                   Book
                 </button>
@@ -65,7 +65,7 @@
                 <button
                   class="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 mr-2"
                   @click="acceptAppointment(appointment.id)"
-                  :disabled="appointment.status !== 'Pending'"
+                  :disabled="appointment.status !== 'pending'"
                 >
                   Accept
                 </button>

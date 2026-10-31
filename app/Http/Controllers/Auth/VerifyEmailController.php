@@ -30,21 +30,8 @@ class VerifyEmailController extends Controller
     /**
      * Redirect user based on their Spatie role.
      */
-    private function redirectToRoleDashboard($user): RedirectResponse
+    private function redirectToRoleDashboard(\App\Models\User $user): RedirectResponse
     {
-        if ($user->hasRole('admin')) {
-            return redirect()->route('admin.dashboard')->with('verified', true);
-        }
-
-        if ($user->hasRole('doctor')) {
-            return redirect()->route('doctor.dashboard')->with('verified', true);
-        }
-
-        if ($user->hasRole('patient')) {
-            return redirect()->route('patient.dashboard')->with('verified', true);
-        }
-
-        // fallback if no role assigned
-        return redirect()->route('welcome')->with('verified', true);
+        return redirect()->route($user->dashboardRoute())->with('verified', true);
     }
 }

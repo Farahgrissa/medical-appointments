@@ -4,96 +4,99 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class ProfileTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_profile_page_is_displayed(): void
+    public function test_profile_edit_page_is_displayed(): void
     {
-        $user = User::factory()->create();
-
-        $response = $this
-            ->actingAs($user)
-            ->get('/profile');
-
-        $response->assertOk();
+        $this->actingAs(User::factory()->patient()->create())
+            ->get('/patient/profile/edit')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->component('Profile/Edit_UpdateProfile'));
     }
 
     public function test_profile_information_can_be_updated(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->patient()->create();
 
-        $response = $this
-            ->actingAs($user)
-            ->patch('/profile', [
+        $this->actingAs($user)
+            ->from('/patient/profile/edit')
+            ->put('/patient/profile/update', [
                 'name' => 'Test User',
-                'email' => 'test@example.com',
-            ]);
-
-        $response
+                'phone' => '0600000000',
+                'gender' => 'female',
+            ])
             ->assertSessionHasNoErrors()
-            ->assertRedirect('/profile');
+            ->assertRedirect('/patient/profile/edit');
 
         $user->refresh();
 
         $this->assertSame('Test User', $user->name);
-        $this->assertSame('test@example.com', $user->email);
-        $this->assertNull($user->email_verified_at);
+        $this->assertSame('0600000000', $user->phone);
+        $this->assertTrue(Hash::check('password', $user->password));
     }
 
-    public function test_email_verification_status_is_unchanged_when_the_email_address_is_unchanged(): void
+    public function test_password_can_be_changed_with_current_password(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->patient()->create();
 
-        $response = $this
-            ->actingAs($user)
-            ->patch('/profile', [
-                'name' => 'Test User',
-                'email' => $user->email,
-            ]);
+        $this->actingAs($user)
+            ->put('/patient/profile/update', [
+                'name' => $user->name,
+                'current_password' => 'password',
+                'password' => 'new-password',
+                'password_confirmation' => 'new-password',
+            ])
+            ->assertSessionHasNoErrors();
 
-        $response
-            ->assertSessionHasNoErrors()
-            ->assertRedirect('/profile');
+        $this->assertTrue(Hash::check('new-password', $user->refresh()->password));
+    }
 
-        $this->assertNotNull($user->refresh()->email_verified_at);
+    public function test_password_cannot_be_changed_without_current_password(): void
+    {
+        $user = User::factory()->patient()->create();
+
+        $this->actingAs($user)
+            ->put('/patient/profile/update', [
+                'name' => $user->name,
+                'password' => 'new-password',
+                'password_confirmation' => 'new-password',
+            ])
+            ->assertSessionHasErrors('current_password');
+
+        $this->assertTrue(Hash::check('password', $user->refresh()->password));
+    }
+
+    public function test_password_cannot_be_changed_with_wrong_current_password(): void
+    {
+        $user = User::factory()->patient()->create();
+
+        $this->actingAs($user)
+            ->put('/patient/profile/update', [
+                'name' => $user->name,
+                'current_password' => 'wrong-password',
+                'password' => 'new-password',
+                'password_confirmation' => 'new-password',
+            ])
+            ->assertSessionHasErrors('current_password');
+
+        $this->assertTrue(Hash::check('password', $user->refresh()->password));
     }
 
     public function test_user_can_delete_their_account(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->patient()->create();
 
-        $response = $this
-            ->actingAs($user)
-            ->delete('/profile', [
-                'password' => 'password',
-            ]);
-
-        $response
-            ->assertSessionHasNoErrors()
+        $this->actingAs($user)
+            ->delete('/patient/profile/destroy')
             ->assertRedirect('/');
 
         $this->assertGuest();
         $this->assertNull($user->fresh());
-    }
-
-    public function test_correct_password_must_be_provided_to_delete_account(): void
-    {
-        $user = User::factory()->create();
-
-        $response = $this
-            ->actingAs($user)
-            ->from('/profile')
-            ->delete('/profile', [
-                'password' => 'wrong-password',
-            ]);
-
-        $response
-            ->assertSessionHasErrors('password')
-            ->assertRedirect('/profile');
-
-        $this->assertNotNull($user->fresh());
     }
 }

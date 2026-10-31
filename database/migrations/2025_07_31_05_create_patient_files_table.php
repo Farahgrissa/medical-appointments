@@ -26,8 +26,8 @@ return new class extends Migration
             // Données médicales
             $table->json('allergies')->nullable()->comment('Liste des allergies en JSON');
             $table->json('current_medications')->nullable()->comment('Médicaments actuels en JSON');
-            $table->text('medical_history')->fulltext()->comment('Antécédents médicaux');
-            $table->text('chronic_conditions')->fulltext()->comment('Pathologies chroniques');
+            $table->text('medical_history')->comment('Antécédents médicaux');
+            $table->text('chronic_conditions')->comment('Pathologies chroniques');
             $table->text('surgical_history')->nullable()->comment('Antécédents chirurgicaux');
             $table->text('family_history')->nullable()->comment('Antécédents familiaux');
             
@@ -38,6 +38,12 @@ return new class extends Migration
             // Index
             $table->index('patient_id');
             $table->index('blood_type');
+
+            // Les index fulltext ne sont pas supportés par SQLite (utilisé pour les tests)
+            if (in_array(Schema::getConnection()->getDriverName(), ['mysql', 'mariadb', 'pgsql'])) {
+                $table->fullText('medical_history');
+                $table->fullText('chronic_conditions');
+            }
         });
     }
 

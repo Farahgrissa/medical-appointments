@@ -22,3 +22,8 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+# Dumps de base de données et fichiers générés
+*.sql
+/liste_fichiers.txt
+/structure.txt

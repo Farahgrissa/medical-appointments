@@ -31,21 +31,13 @@ class AuthenticatedSessionController extends Controller
             'password' => ['required', 'string', 'min:6'],
         ]);
 
-        if (Auth::attempt($credentials)) {
+        if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
-            /** @var \App\Models\User|null $user */
+            /** @var \App\Models\User $user */
             $user = Auth::user();
 
             // Redirection selon le rôle
-            if ($user->hasRole('admin')) {
-                return redirect()->route('admin.dashboard');
-            } elseif ($user->hasRole('doctor')) {
-                return redirect()->route('doctor.dashboard');
-            } elseif ($user->hasRole('patient')) {
-                return redirect()->route('patient.dashboard');
-            } else {
-                return redirect()->route('welcome');
-            }
+            return redirect()->route($user->dashboardRoute());
         }
 
         return back()->withErrors([

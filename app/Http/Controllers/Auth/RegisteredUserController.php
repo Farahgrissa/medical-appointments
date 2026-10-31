@@ -31,7 +31,6 @@ class RegisteredUserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'confirmed', Password::defaults()],
-            'role' => ['required', 'in:doctor,patient'], 
         ]);
 
         // Create the user
@@ -41,18 +40,13 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        // Assign the role using Spatie
-        $user->assignRole($request->role);
+        // Public registration is for patients only: doctor accounts are created by an admin
+        $user->assignRole('patient');
 
         // Log the user in
         Auth::login($user);
 
-        // Redirect based on role
-        return match (true) {
-            $user->hasRole('doctor') => redirect()->route('doctor.dashboard'),
-            $user->hasRole('patient') => redirect()->route('patient.dashboard'),
-            default => redirect()->route('home'),
-        };
+        return redirect()->route('patient.dashboard');
     }
 
     /**

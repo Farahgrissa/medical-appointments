@@ -23,6 +23,7 @@ use App\Models\PatientFile;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
+    /** @use HasFactory<\Database\Factories\UserFactory> */
     use  Notifiable, HasFactory, HasRoles;
 
     // ===== Champs assignables =====
@@ -76,5 +77,20 @@ public function patientAppointments()
     public function patientFile()
     {
         return $this->hasOne(PatientFile::class, 'patient_id');
+    }
+
+    // ===== HELPERS =====
+
+    /**
+     * Name of the dashboard route matching the user's role ('home' if no role).
+     */
+    public function dashboardRoute(): string
+    {
+        return match (true) {
+            $this->hasRole('admin') => 'admin.dashboard',
+            $this->hasRole('doctor') => 'doctor.dashboard',
+            $this->hasRole('patient') => 'patient.dashboard',
+            default => 'home',
+        };
     }
 }

@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
 
 class ProfileController extends Controller
 {
@@ -46,7 +47,9 @@ class ProfileController extends Controller
             'gender' => 'nullable|in:male,female',
             'date_of_birth' => 'nullable|date',
             'address' => 'nullable|string|max:255',
-            'password' => 'nullable|string|min:6',
+            // Changer le mot de passe exige l'ancien et une confirmation
+            'current_password' => ['required_with:password', 'nullable', 'current_password'],
+            'password' => ['nullable', 'confirmed', Password::defaults()],
         ]);
 
         $user->name = $request->name;
@@ -75,13 +78,16 @@ class ProfileController extends Controller
     }
 
     // Supprimer le compte
-    public function destroy()
+    public function destroy(Request $request)
     {/** @var \App\Models\User $user */
         $user = Auth::user();
 
         Auth::logout();
         $user->delete();
 
-        return redirect('/welcome')->with('success', 'Your account has been deleted.');
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('home')->with('success', 'Your account has been deleted.');
     }
 }
