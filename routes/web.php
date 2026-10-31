@@ -67,6 +67,8 @@ Route::prefix('doctor')->middleware(['auth', 'role:doctor'])->group(function () 
     Route::get('/appointments', [DoctorController::class, 'appointments'])->name('doctor.appointments');
     Route::patch('/appointments/{appointment}/confirm', [DoctorController::class, 'confirmAppointment'])->name('doctor.confirmAppointment');
     Route::patch('/appointments/{appointment}/cancel', [DoctorController::class, 'cancelAppointment'])->name('doctor.cancelAppointment');
+    Route::patch('/appointments/{appointment}/complete', [DoctorController::class, 'completeAppointment'])->name('doctor.completeAppointment');
+    Route::patch('/appointments/{appointment}/no-show', [DoctorController::class, 'noShowAppointment'])->name('doctor.noShowAppointment');
 
     // Profile
     Route::get('/profile', [DoctorController::class, 'profile'])->name('doctor.profile');
@@ -77,5 +79,13 @@ Route::prefix('doctor')->middleware(['auth', 'role:doctor'])->group(function () 
 // ===== Admin routes =====
 Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
-    // ajoute tes autres méthodes ici
+
+    // Users (moderation)
+    Route::get('/users', [AdminController::class, 'users'])->name('admin.users');
+    Route::patch('/users/{user}/deactivate', [AdminController::class, 'deactivate'])->name('admin.deactivateUser');
+    Route::patch('/users/{user}/reactivate', [AdminController::class, 'reactivate'])->name('admin.reactivateUser');
+
+    // Doctors
+    Route::get('/doctors/create', [AdminController::class, 'createDoctor'])->name('admin.createDoctor');
+    Route::post('/doctors', [AdminController::class, 'storeDoctor'])->name('admin.storeDoctor');
 });

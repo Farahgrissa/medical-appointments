@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Users;
 
 use App\Http\Controllers\Controller;
+use App\Services\AccountService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
@@ -77,13 +78,14 @@ class ProfileController extends Controller
         ]);
     }
 
-    // Supprimer le compte
-    public function destroy(Request $request)
+    // Supprimer le compte (soft delete : les rendez-vous passés sont conservés,
+    // les rendez-vous à venir sont annulés)
+    public function destroy(Request $request, AccountService $accounts)
     {/** @var \App\Models\User $user */
         $user = Auth::user();
 
         Auth::logout();
-        $user->delete();
+        $accounts->delete($user);
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();

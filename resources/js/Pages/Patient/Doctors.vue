@@ -7,7 +7,7 @@
         <input
           v-model="query"
           type="text"
-          placeholder="Search by name..."
+          placeholder="Search by name or specialty..."
           class="flex-1 px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-400"
         />
         <button type="submit" class="px-4 py-2 bg-amber-600 text-white rounded hover:bg-amber-700">
@@ -23,6 +23,7 @@
         >
           <div>
             <p class="font-semibold">{{ doctor.name }}</p>
+            <p v-if="doctor.specialty" class="text-sm text-stone-700">{{ doctor.specialty }}</p>
             <p class="text-sm text-stone-600">
               {{ doctor.available_slots_count }} available slot{{ doctor.available_slots_count === 1 ? '' : 's' }}
             </p>

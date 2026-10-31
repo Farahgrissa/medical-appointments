@@ -16,6 +16,7 @@ class SlotController extends Controller
     {
         $slots = $request->user()->slots()
             ->upcoming()
+            ->where('status', '!=', SlotStatus::Cancelled)
             ->with(['appointments' => fn ($q) => $q->active()->with('patient:id,name')])
             ->orderBy('date')
             ->orderBy('start_time')
@@ -41,7 +42,13 @@ class SlotController extends Controller
     {
         $this->authorize('delete', $slot);
 
-        $slot->delete();
+        // Un créneau qui a un historique (rendez-vous annulé) est retiré, pas supprimé :
+        // les rendez-vous ne doivent jamais disparaître.
+        if ($slot->appointments()->exists()) {
+            $slot->update(['status' => SlotStatus::Cancelled]);
+        } else {
+            $slot->delete();
+        }
 
         return redirect()->route('doctor.slots')->with('success', 'Slot deleted.');
     }

@@ -32,9 +32,19 @@ class AuthenticatedSessionController extends Controller
         ]);
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
-            $request->session()->regenerate();
             /** @var \App\Models\User $user */
             $user = Auth::user();
+
+            // Compte désactivé par un admin (les comptes supprimés, eux, ne peuvent pas s'authentifier)
+            if ($user->isDeactivated()) {
+                Auth::guard('web')->logout();
+
+                return back()->withErrors([
+                    'email' => 'Your account has been deactivated. Please contact the clinic.',
+                ]);
+            }
+
+            $request->session()->regenerate();
 
             // Redirection selon le rôle
             return redirect()->route($user->dashboardRoute());

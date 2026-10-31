@@ -1,6 +1,7 @@
 <?php
 namespace App\Http\Controllers\Users;
 
+use App\Enums\AppointmentStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\BookAppointmentRequest;
 use App\Http\Requests\RescheduleAppointmentRequest;
@@ -44,21 +45,18 @@ class PatientController extends Controller
     public function appointments(Request $request)
     {/** @var \App\Models\User $user */
         $user = Auth::user();
+        $filters = $request->only(['search', 'period', 'status']);
 
         $appointments = $user->patientAppointments()
-            ->with('doctor')
-            ->when($request->input('status') === 'upcoming', fn($q) => $q->whereDate('appointment_date', '>=', now()->toDateString()))
-            ->when($request->input('status') === 'past', fn($q) => $q->whereDate('appointment_date', '<', now()->toDateString()))
-            ->when($request->input('search'), fn($q, $search) =>
-                $q->whereHas('doctor', fn($q2) => $q2->where('name', 'like', "%{$search}%"))
-            )
-            ->orderBy('appointment_date', 'desc')
+            ->with('doctor:id,name,specialty,deleted_at')
+            ->filter($filters, 'doctor')
             ->paginate(10)
             ->withQueryString();
 
         return Inertia::render('Patient/Appointments', [
             'appointments' => $appointments,
-            'filters' => $request->only(['search', 'status']),
+            'filters' => $filters,
+            'statuses' => AppointmentStatus::cases(),
         ]);
     }
 
@@ -66,9 +64,12 @@ class PatientController extends Controller
     public function doctors(Request $request)
     {
         $doctors = User::role('doctor')
-            ->select('id', 'name')
+            ->notDeactivated()
+            ->select('id', 'name', 'specialty')
             ->withCount(['slots as available_slots_count' => fn ($q) => $q->available()])
-            ->when($request->input('search'), fn ($q, $search) => $q->where('name', 'like', "%{$search}%"))
+            ->when($request->input('search'), fn ($q, $search) => $q->where(fn ($q2) => $q2
+                ->where('name', 'like', "%{$search}%")
+                ->orWhere('specialty', 'like', "%{$search}%")))
             ->orderBy('name')
             ->get();
 
@@ -80,10 +81,10 @@ class PatientController extends Controller
 
     public function doctorSlots(User $doctor)
     {
-        abort_unless($doctor->hasRole('doctor'), 404);
+        abort_unless($doctor->hasRole('doctor') && ! $doctor->isDeactivated(), 404);
 
         return Inertia::render('Patient/DoctorSlots', [
-            'doctor' => $doctor->only('id', 'name'),
+            'doctor' => $doctor->only('id', 'name', 'specialty'),
             'slots' => $doctor->slots()->available()->orderBy('date')->orderBy('start_time')->get(),
         ]);
     }

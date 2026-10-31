@@ -2,10 +2,13 @@
 
 namespace App\Policies;
 
-use App\Enums\AppointmentStatus;
 use App\Models\Appointment;
 use App\Models\User;
 
+/**
+ * Before the appointment starts: confirm, reschedule, cancel.
+ * Once it has started: only the doctor can close it (completed / no-show).
+ */
 class AppointmentPolicy
 {
     /**
@@ -32,26 +35,43 @@ class AppointmentPolicy
     {
         return $user->can('edit-appointment')
             && $user->id === $appointment->doctor_id
-            && $appointment->isPending();
+            && $appointment->isPending()
+            && ! $appointment->hasStarted();
     }
 
     /**
-     * Only the patient who booked the appointment can reschedule it, and not once cancelled.
+     * Only the patient who booked the appointment can reschedule it, while it is still open.
      */
     public function update(User $user, Appointment $appointment): bool
     {
         return $user->can('edit-appointment')
             && $user->id === $appointment->patient_id
-            && $appointment->status !== AppointmentStatus::Cancelled;
+            && $this->isOpenAndUpcoming($appointment);
     }
 
     /**
-     * The patient or the doctor of the appointment can cancel it.
+     * The patient or the doctor of the appointment can cancel it, while it is still open.
      */
     public function cancel(User $user, Appointment $appointment): bool
     {
         return $this->isParticipant($user, $appointment)
-            && $appointment->status !== AppointmentStatus::Cancelled;
+            && $this->isOpenAndUpcoming($appointment);
+    }
+
+    /**
+     * After the start time, the doctor records the outcome: completed or no-show.
+     */
+    public function close(User $user, Appointment $appointment): bool
+    {
+        return $user->can('edit-appointment')
+            && $user->id === $appointment->doctor_id
+            && $appointment->status->isOpen()
+            && $appointment->hasStarted();
+    }
+
+    private function isOpenAndUpcoming(Appointment $appointment): bool
+    {
+        return $appointment->status->isOpen() && ! $appointment->hasStarted();
     }
 
     private function isParticipant(User $user, Appointment $appointment): bool

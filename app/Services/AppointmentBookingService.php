@@ -104,6 +104,22 @@ class AppointmentBookingService
     }
 
     /**
+     * After the appointment: the patient came...
+     */
+    public function complete(Appointment $appointment): void
+    {
+        $appointment->update(['status' => AppointmentStatus::Completed]);
+    }
+
+    /**
+     * ...or did not come.
+     */
+    public function markNoShow(Appointment $appointment): void
+    {
+        $appointment->update(['status' => AppointmentStatus::NoShow]);
+    }
+
+    /**
      * Make a slot bookable again, unless it is already over.
      */
     private function release(Slot $slot): void
@@ -126,6 +142,12 @@ class AppointmentBookingService
         if ($slot->isPast()) {
             throw ValidationException::withMessages([
                 'slot_id' => 'This slot is in the past.',
+            ]);
+        }
+
+        if (! $slot->isBookable()) {
+            throw ValidationException::withMessages([
+                'slot_id' => 'This doctor is not accepting appointments at the moment.',
             ]);
         }
     }

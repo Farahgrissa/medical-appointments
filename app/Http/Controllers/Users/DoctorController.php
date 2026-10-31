@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Users;
 
+use App\Enums\AppointmentStatus;
 use App\Http\Controllers\Controller;
 use App\Services\AppointmentBookingService;
 use Illuminate\Http\Request;
@@ -58,26 +59,42 @@ class DoctorController extends Controller
         return back()->with('success', 'Appointment cancelled.');
     }
 
+    // ===== CLOSE A PAST APPOINTMENT =====
+    public function completeAppointment(Appointment $appointment)
+    {
+        $this->authorize('close', $appointment);
+
+        $this->booking->complete($appointment);
+
+        return back()->with('success', 'Appointment marked as completed.');
+    }
+
+    public function noShowAppointment(Appointment $appointment)
+    {
+        $this->authorize('close', $appointment);
+
+        $this->booking->markNoShow($appointment);
+
+        return back()->with('success', 'Appointment marked as no-show.');
+    }
+
     // Voir ses rendez-vous
     public function appointments(Request $request)
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
+        $filters = $request->only(['search', 'period', 'status']);
 
         $appointments = $user->doctorAppointments()
-            ->with('patient')
-            ->when($request->input('status') === 'upcoming', fn($q) => $q->where('appointment_date', '>=', now()))
-            ->when($request->input('status') === 'past', fn($q) => $q->where('appointment_date', '<', now()))
-            ->when($request->input('search'), fn($q, $search) => 
-                $q->whereHas('patient', fn($q2) => $q2->where('name', 'like', "%{$search}%"))
-            )
-            ->orderBy('appointment_date', 'desc')
+            ->with('patient:id,name,deleted_at')
+            ->filter($filters, 'patient')
             ->paginate(10)
             ->withQueryString();
 
         return Inertia::render('Doctor/Appointments', [
             'appointments' => $appointments,
-            'filters' => $request->only(['search', 'status']),
+            'filters' => $filters,
+            'statuses' => AppointmentStatus::cases(),
         ]);
     }
 
@@ -85,7 +102,7 @@ class DoctorController extends Controller
     public function profile()
     {
         return Inertia::render('Doctor/Profile', [
-            'user' => Auth::user(),
+            'user' => Auth::user()->only('name', 'email', 'phone', 'date_of_birth', 'specialty'),
         ]);
     }
 

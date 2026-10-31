@@ -84,10 +84,26 @@ class Slot extends Model
 
     /**
      * Scope for available slots that can still be booked
+     * (a deactivated or deleted doctor cannot be booked)
      */
     public function scopeAvailable(Builder $query): Builder
     {
-        return $query->where('status', SlotStatus::Available)->upcoming();
+        return $query->where('status', SlotStatus::Available)
+            ->upcoming()
+            ->whereHas('doctor', fn (Builder $q) => $q->notDeactivated());
+    }
+
+    /**
+     * Can a patient book this slot right now?
+     */
+    public function isBookable(): bool
+    {
+        $doctor = $this->doctor()->first();
+
+        return $this->isAvailable()
+            && ! $this->isPast()
+            && $doctor !== null
+            && ! $doctor->isDeactivated();
     }
 
     /**

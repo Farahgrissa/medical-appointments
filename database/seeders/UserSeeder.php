@@ -33,6 +33,7 @@ class UserSeeder extends Seeder
             ['email' => 'eline@example.com'],
             [
                 'name' => 'Dr. Eline',
+                'specialty' => 'General practitioner',
                 'password' => Hash::make('password'),
             ]
         );
@@ -43,6 +44,7 @@ class UserSeeder extends Seeder
             ['email' => 'john.@example.com'],
             [
                 'name' => 'Dr. John ',
+                'specialty' => 'Cardiology',
                 'password' => Hash::make('password'),
             ]
         );

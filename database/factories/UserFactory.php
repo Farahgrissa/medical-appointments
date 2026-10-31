@@ -46,7 +46,14 @@ class UserFactory extends Factory
 
     public function doctor(): static
     {
-        return $this->afterCreating(fn (User $user) => $user->assignRole('doctor'));
+        return $this
+            ->state(fn () => ['specialty' => fake()->randomElement(['General practitioner', 'Cardiology', 'Dermatology', 'Pediatrics'])])
+            ->afterCreating(fn (User $user) => $user->assignRole('doctor'));
+    }
+
+    public function deactivated(): static
+    {
+        return $this->state(fn () => ['deactivated_at' => now()]);
     }
 
     public function patient(): static

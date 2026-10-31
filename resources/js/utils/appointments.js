@@ -25,6 +25,8 @@ const STATUS_CLASSES = {
   pending: 'bg-amber-100 text-amber-800',
   confirmed: 'bg-green-100 text-green-800',
   cancelled: 'bg-stone-200 text-stone-600',
+  completed: 'bg-blue-100 text-blue-800',
+  no_show: 'bg-red-100 text-red-800',
   available: 'bg-green-100 text-green-800',
   booked: 'bg-blue-100 text-blue-800',
 }
@@ -33,6 +35,14 @@ export function statusClasses(status) {
   return STATUS_CLASSES[status] ?? 'bg-stone-100 text-stone-700'
 }
 
+// "no_show" -> "No show"
 export function statusLabel(status) {
-  return status ? status.charAt(0).toUpperCase() + status.slice(1) : ''
+  if (!status) return ''
+  const label = status.replace('_', ' ')
+  return label.charAt(0).toUpperCase() + label.slice(1)
+}
+
+// Un rendez-vous encore modifiable (en attente ou confirmé)
+export function isOpen(appointment) {
+  return ['pending', 'confirmed'].includes(appointment.status)
 }

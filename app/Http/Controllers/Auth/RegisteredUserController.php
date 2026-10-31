@@ -48,21 +48,4 @@ class RegisteredUserController extends Controller
 
         return redirect()->route('patient.dashboard');
     }
-
-    /**
-     * Delete a user (destroy account).
-     */
-    public function destroy(Request $request)
-    {
-        $user = $request->user();
-
-        // Logout the user first
-        Auth::logout();
-
-        // Delete the user
-        $user->delete();
-
-        // Redirect to home or login page
-        return redirect()->route('home')->with('status', 'Account deleted successfully.');
-    }
 }

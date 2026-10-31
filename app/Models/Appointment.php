@@ -27,12 +27,15 @@ class Appointment extends Model
         'status' => AppointmentStatus::class,
     ];
 
+    protected $appends = ['has_started'];
+
     /**
      * Patient relationship
      */
     public function patient(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'patient_id')->withDefault();
+        // withTrashed : le nom d'un compte supprimé reste visible dans l'historique
+        return $this->belongsTo(User::class, 'patient_id')->withTrashed()->withDefault();
     }
 
     /**
@@ -40,7 +43,7 @@ class Appointment extends Model
      */
     public function doctor(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'doctor_id')->withDefault();
+        return $this->belongsTo(User::class, 'doctor_id')->withTrashed()->withDefault();
     }
 
     /**
@@ -69,21 +72,78 @@ class Appointment extends Model
         return $this->status === AppointmentStatus::Pending;
     }
 
+    public function startsAt(): Carbon
+    {
+        return Carbon::parse($this->appointment_date->toDateString().' '.$this->start_time);
+    }
+
+    /**
+     * Once started, an appointment can no longer be confirmed, moved or cancelled:
+     * the doctor can only mark it as completed or no-show.
+     */
+    public function hasStarted(): bool
+    {
+        return $this->startsAt()->lte(now());
+    }
+
+    /**
+     * Exposed to the front-end as "has_started" to show the right actions.
+     */
+    public function getHasStartedAttribute(): bool
+    {
+        return $this->appointment_date && $this->start_time && $this->hasStarted();
+    }
+
     /**
      * Scopes
      */
     public function scopeUpcoming(Builder $query): Builder
     {
-        return $query->whereDate('appointment_date', '>=', now()->toDateString())
-                     ->orderBy('appointment_date')
-                     ->orderBy('start_time');
+        $now = now();
+
+        return $query->where(fn (Builder $q) => $q
+                ->whereDate('appointment_date', '>', $now->toDateString())
+                ->orWhere(fn (Builder $q2) => $q2
+                    ->whereDate('appointment_date', $now->toDateString())
+                    ->where('start_time', '>', $now->format('H:i:s'))))
+            ->orderBy('appointment_date')
+            ->orderBy('start_time');
     }
 
     public function scopePast(Builder $query): Builder
     {
-        return $query->whereDate('appointment_date', '<', now()->toDateString())
-                     ->orderByDesc('appointment_date')
-                     ->orderByDesc('start_time');
+        $now = now();
+
+        return $query->where(fn (Builder $q) => $q
+                ->whereDate('appointment_date', '<', $now->toDateString())
+                ->orWhere(fn (Builder $q2) => $q2
+                    ->whereDate('appointment_date', $now->toDateString())
+                    ->where('start_time', '<=', $now->format('H:i:s'))))
+            ->orderByDesc('appointment_date')
+            ->orderByDesc('start_time');
+    }
+
+    /**
+     * Filters of the appointment lists:
+     *  - period : "upcoming" | "past" (default: all, newest first)
+     *  - status : one of AppointmentStatus
+     *  - search : name of the other party ($searchRelation = "patient" or "doctor")
+     */
+    public function scopeFilter(Builder $query, array $filters, string $searchRelation): Builder
+    {
+        $status = AppointmentStatus::tryFrom($filters['status'] ?? '');
+
+        return $query
+            ->when($status, fn (Builder $q) => $q->where('status', $status))
+            ->when($filters['search'] ?? null, fn (Builder $q, string $search) => $q
+                ->whereHas($searchRelation, fn (Builder $q2) => $q2->where('name', 'like', "%{$search}%")))
+            ->when(
+                ($filters['period'] ?? null) === 'upcoming',
+                fn (Builder $q) => $q->upcoming(),
+                fn (Builder $q) => ($filters['period'] ?? null) === 'past'
+                    ? $q->past()
+                    : $q->orderByDesc('appointment_date')->orderByDesc('start_time'),
+            );
     }
 
     /**
@@ -91,7 +151,7 @@ class Appointment extends Model
      */
     public function scopeActive(Builder $query): Builder
     {
-        return $query->where('status', '!=', AppointmentStatus::Cancelled);
+        return $query->whereIn('status', AppointmentStatus::open());
     }
 
     /**

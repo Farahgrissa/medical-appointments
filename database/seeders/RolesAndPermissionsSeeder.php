@@ -29,6 +29,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'view-profile',
             'edit-profile',
             'delete-profile',
+            'manage-users',
         ];
 
         foreach ($permissions as $perm) {

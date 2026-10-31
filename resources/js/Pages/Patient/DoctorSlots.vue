@@ -4,7 +4,9 @@
       <Link :href="route('patient.doctors')" class="text-sm text-amber-600 hover:text-amber-500">
         &larr; Back to doctors
       </Link>
-      <h3 class="text-amber-600 font-bold text-xl mt-2 mb-4">Book with {{ doctor.name }}</h3>
+      <h3 class="text-amber-600 font-bold text-xl mt-2">Book with {{ doctor.name }}</h3>
+      <p v-if="doctor.specialty" class="text-stone-600 mb-4">{{ doctor.specialty }}</p>
+      <div v-else class="mb-4" />
 
       <div v-if="slots.length">
         <!-- Créneaux groupés par jour -->

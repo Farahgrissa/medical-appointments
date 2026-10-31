@@ -57,18 +57,25 @@ const hasRole = (role) => roles.value.includes(role)
 
 const items = computed(() => {
   if (hasRole('admin')) {
-    return [{ label: 'Dashboard', href: '/admin/dashboard' }]
+    return [
+      { label: 'Dashboard', href: '/admin/dashboard' },
+      { label: 'Users', href: '/admin/users' },
+      { label: 'Add a doctor', href: '/admin/doctors/create' },
+    ]
   }
   if (hasRole('doctor')) {
     return [
       { label: 'Dashboard', href: '/doctor/dashboard' },
+      { label: 'Appointments', href: '/doctor/appointments' },
       { label: 'My slots', href: '/doctor/slots' },
+      { label: 'Profile', href: '/doctor/profile' },
     ]
   }
   if (hasRole('patient')) {
     return [
       { label: 'Dashboard', href: '/patient/dashboard' },
       { label: 'Book an appointment', href: '/patient/doctors' },
+      { label: 'My appointments', href: '/patient/appointments' },
     ]
   }
   return []

@@ -97,6 +97,7 @@ class ProfileTest extends TestCase
             ->assertRedirect('/');
 
         $this->assertGuest();
-        $this->assertNull($user->fresh());
+        // Soft delete : le compte est conservé pour l'historique, mais ne peut plus se connecter
+        $this->assertSoftDeleted($user);
     }
 }
