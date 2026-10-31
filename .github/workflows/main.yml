@@ -1,36 +1,77 @@
-# This is a basic workflow to help you get started with Actions
+# Intégration continue : à chaque push / pull request, GitHub compile le front
+# et lance la suite de tests. Une PR vers main ne devrait être fusionnée que si ce job est vert.
 
 name: CI
 
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the main branch
   push:
-    branches:  [ main ]
+    branches: [main, devops]
   pull_request:
-    branches: [ main ]
-
-  # Allows you to run this workflow manually from the Actions tab
+    branches: [main]
+  # Bouton "Run workflow" dans l'onglet Actions
   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+permissions:
+  contents: read
+
+# Un nouveau push sur la même branche annule le run précédent encore en cours
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
+  tests:
+    name: Build & tests
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      # Runs a single command using the runners shell
-      - name: Run a one-line script
-        run: echo Hello, world!
+      # ===== PHP =====
+      - name: Setup PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, pdo_sqlite, sqlite3, intl, zip, fileinfo
+          coverage: none
 
-      # Runs a set of commands using the runners shell
-      - name: Run a multi-line script
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: composer-${{ runner.os }}-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-${{ runner.os }}-
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      # ===== Front =====
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install JS dependencies
+        run: npm ci
+
+      # Le build doit précéder les tests : app.blade.php appelle @vite,
+      # qui a besoin de public/build/manifest.json
+      - name: Build front-end
+        run: npm run build
+
+      # ===== Tests =====
+      - name: Prepare environment
         run: |
-          echo Add other actions to build,
-          echo test, and deploy your project.
+          cp .env.example .env
+          php artisan key:generate
+
+      # phpunit.xml force SQLite en mémoire, cache/session "array" et mails "array"
+      - name: Run tests
+        run: php artisan test
