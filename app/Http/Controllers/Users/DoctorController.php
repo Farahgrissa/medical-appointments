@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Users;
 
 use App\Http\Controllers\Controller;
+use App\Services\AppointmentBookingService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
@@ -10,20 +11,51 @@ use App\Models\Appointment;
 
 class DoctorController extends Controller
 {
+    public function __construct(private AppointmentBookingService $booking)
+    {
+    }
+
     // Dashboard
     public function dashboard()
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
-        $upcomingAppointments = $user->doctorAppointments()
-            ->where('appointment_date', '>=', now())
+        $appointments = $user->doctorAppointments()
+            ->active()
+            ->upcoming()
+            ->with('patient:id,name')
+            ->get();
+
+        $availableSlots = $user->slots()
+            ->available()
+            ->orderBy('date')
+            ->orderBy('start_time')
             ->get();
 
         return Inertia::render('Dashboards/DoctorDashboard', [
-            'user' => $user,
-            'upcomingAppointments' => $upcomingAppointments,
+            'appointments' => $appointments,
+            'availableSlots' => $availableSlots,
         ]);
+    }
+
+    // ===== CONFIRM / CANCEL APPOINTMENT =====
+    public function confirmAppointment(Appointment $appointment)
+    {
+        $this->authorize('confirm', $appointment);
+
+        $this->booking->confirm($appointment);
+
+        return back()->with('success', 'Appointment confirmed.');
+    }
+
+    public function cancelAppointment(Appointment $appointment)
+    {
+        $this->authorize('cancel', $appointment);
+
+        $this->booking->cancel($appointment);
+
+        return back()->with('success', 'Appointment cancelled.');
     }
 
     // Voir ses rendez-vous

@@ -18,6 +18,24 @@ class AppointmentPolicy
     }
 
     /**
+     * Only patients book appointments.
+     */
+    public function create(User $user): bool
+    {
+        return $user->can('create-appointment') && $user->hasRole('patient');
+    }
+
+    /**
+     * The doctor of the appointment confirms it while it is pending.
+     */
+    public function confirm(User $user, Appointment $appointment): bool
+    {
+        return $user->can('edit-appointment')
+            && $user->id === $appointment->doctor_id
+            && $appointment->isPending();
+    }
+
+    /**
      * Only the patient who booked the appointment can reschedule it, and not once cancelled.
      */
     public function update(User $user, Appointment $appointment): bool

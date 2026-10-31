@@ -3,8 +3,10 @@
 namespace App\Models;
 
 use App\Enums\AppointmentStatus;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 class Appointment extends Model
 {
@@ -19,10 +21,9 @@ class Appointment extends Model
         'reason',
     ];
 
+    // start_time / end_time are TIME columns: kept as "H:i:s" strings (see Slot)
     protected $casts = [
         'appointment_date' => 'date:Y-m-d',
-        'start_time' => 'datetime:H:i:s',
-        'end_time' => 'datetime:H:i:s',
         'status' => AppointmentStatus::class,
     ];
 
@@ -63,21 +64,34 @@ class Appointment extends Model
         return $this->status === AppointmentStatus::Cancelled;
     }
 
+    public function isPending(): bool
+    {
+        return $this->status === AppointmentStatus::Pending;
+    }
+
     /**
      * Scopes
      */
-    public function scopeUpcoming($query)
+    public function scopeUpcoming(Builder $query): Builder
     {
-        return $query->where('appointment_date', '>=', now()->startOfDay())
+        return $query->whereDate('appointment_date', '>=', now()->toDateString())
                      ->orderBy('appointment_date')
                      ->orderBy('start_time');
     }
 
-    public function scopePast($query)
+    public function scopePast(Builder $query): Builder
     {
-        return $query->where('appointment_date', '<', now()->startOfDay())
+        return $query->whereDate('appointment_date', '<', now()->toDateString())
                      ->orderByDesc('appointment_date')
                      ->orderByDesc('start_time');
+    }
+
+    /**
+     * Appointments that still hold their slot (pending or confirmed)
+     */
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('status', '!=', AppointmentStatus::Cancelled);
     }
 
     /**
@@ -85,8 +99,8 @@ class Appointment extends Model
      */
     public function durationInMinutes(): ?int
     {
-        return $this->start_time && $this->end_time 
-            ? $this->start_time->diffInMinutes($this->end_time)
+        return $this->start_time && $this->end_time
+            ? (int) Carbon::parse($this->start_time)->diffInMinutes(Carbon::parse($this->end_time))
             : null;
     }
 }

@@ -10,6 +10,20 @@
 
       <!-- Page Content -->
       <main class="flex-1 p-6">
+        <!-- Flash messages (->with('success'|'error') côté Laravel) -->
+        <div
+          v-if="flash.success"
+          class="mb-4 p-3 rounded bg-green-50 border border-green-200 text-green-700 text-sm"
+        >
+          {{ flash.success }}
+        </div>
+        <div
+          v-if="flash.error"
+          class="mb-4 p-3 rounded bg-red-50 border border-red-200 text-red-700 text-sm"
+        >
+          {{ flash.error }}
+        </div>
+
         <slot />
       </main>
     </div>
@@ -17,14 +31,21 @@
 </template>
 
 <script lang="js">
+import { computed } from 'vue';
+import { usePage } from '@inertiajs/vue3';
 import appHeader from '@/Components/appHeader.vue';
 import SidebarMenu from '@/Components/SidebarMenu.vue';
 
 export default {
   components: {
     appHeader,
- 
     SidebarMenu,
+  },
+  setup() {
+    const page = usePage();
+    const flash = computed(() => page.props.flash ?? {});
+
+    return { flash };
   },
 };
 </script>

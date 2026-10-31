@@ -42,7 +42,7 @@ class RolesAndPermissionsSeeder extends Seeder
                 'create-appointment', 'view-appointment', 'edit-appointment', 'view-patient-file',
                 'create-slot', 'view-slot', 'edit-slot', 'delete-slot','edit-profile','delete-profile'
             ],
-            'patient' => ['view-appointment', 'view-patient-file','edit-appointment','edit-profile','delete-profile','view-profile'],
+            'patient' => ['create-appointment', 'view-appointment', 'view-patient-file','edit-appointment','edit-profile','delete-profile','view-profile'],
         ];
 
         foreach ($roles as $roleName => $rolePerms) {

@@ -43,7 +43,7 @@ class AppointmentAuthorizationTest extends TestCase
 
         $this->actingAs($patient)
             ->patch(route('patient.cancelAppointment', $appointment))
-            ->assertRedirect(route('patient.appointments'));
+            ->assertRedirect(route('patient.dashboard'));
 
         $this->assertSame(AppointmentStatus::Cancelled, $appointment->fresh()->status);
     }
